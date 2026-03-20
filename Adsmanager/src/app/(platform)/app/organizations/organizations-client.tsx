@@ -56,6 +56,7 @@ export function OrganizationsClient({
   const router = useRouter();
   const user = useUser();
   const canManage = user?.canManage ?? false;
+  const isSuperAdmin = user?.isSuperAdmin ?? false;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -185,7 +186,7 @@ export function OrganizationsClient({
   return (
     <>
       <PageHeader title="Organizations">
-        {canManage && (
+        {isSuperAdmin && (
           <Button type="button" onClick={openCreate}>
             New Organization
           </Button>
@@ -195,9 +196,9 @@ export function OrganizationsClient({
       {organizations.length === 0 ? (
         <EmptyState
           title="No organizations yet"
-          description={canManage ? "Create an organization to manage business units, departments, and ad accounts." : "No organizations are available for your account."}
+          description={isSuperAdmin ? "Create an organization to manage business units, departments, and ad accounts." : "No organizations are available for your account."}
         >
-          {canManage && (
+          {isSuperAdmin && (
             <Button type="button" onClick={openCreate}>
               New Organization
             </Button>

@@ -66,6 +66,15 @@ create policy "Users can update own profile"
   on public.profiles for update
   using (auth_user_id = auth.uid());
 
+create policy "Super admins can update all profiles"
+  on public.profiles for update
+  using (public.is_super_admin())
+  with check (public.is_super_admin());
+
+create policy "Super admins can delete profiles"
+  on public.profiles for delete
+  using (public.is_super_admin());
+
 -- ============================================================
 -- ORGANIZATIONS
 -- ============================================================

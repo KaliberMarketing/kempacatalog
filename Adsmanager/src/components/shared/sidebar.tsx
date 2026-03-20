@@ -16,6 +16,7 @@ import {
   BarChart3,
   ShieldCheck,
   Settings,
+  UserCog,
   X,
 } from "lucide-react";
 
@@ -55,6 +56,12 @@ const settingsItem = {
   href: "/app/settings",
   label: "Settings",
   icon: Settings,
+};
+
+const adminItem = {
+  href: "/app/admin",
+  label: "Admin Panel",
+  icon: UserCog,
 };
 
 interface SidebarProps {
@@ -132,6 +139,30 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </nav>
 
       <div className="border-t border-sidebar-border px-3 py-3 space-y-1">
+        {user?.isSuperAdmin && (() => {
+          const isActive =
+            pathname === adminItem.href ||
+            pathname.startsWith(adminItem.href + "/");
+          return (
+            <Link
+              href={adminItem.href}
+              onClick={onClose}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-sidebar-accent text-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+              )}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <adminItem.icon
+                className="h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
+              {adminItem.label}
+            </Link>
+          );
+        })()}
         {(() => {
           const isActive =
             pathname === settingsItem.href ||
