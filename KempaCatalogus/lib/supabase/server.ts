@@ -4,23 +4,26 @@ import { createServerClient } from '@supabase/ssr';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables on the server');
-}
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
 
-export function createSupabaseServerClient() {
-  const cookieStore = cookies();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables on the server');
+  }
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
+      getAll() {
+        return cookieStore.getAll();
       },
-      set(name: string, value: string, options: Parameters<typeof cookieStore.set>[1]) {
-        cookieStore.set({ name, value, ...options });
-      },
-      remove(name: string, options: Parameters<typeof cookieStore.delete>[1]) {
-        cookieStore.delete({ name, ...options });
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // In server components cookie writes may fail; session refresh is handled via middleware
+        }
       },
     },
   });

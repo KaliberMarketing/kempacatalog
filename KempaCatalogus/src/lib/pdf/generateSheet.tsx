@@ -19,7 +19,21 @@ export async function generateTechnicalSheetPdf(options: {
   );
 
   const instance = pdf(document);
-  const buffer = await instance.toBuffer();
-  return buffer;
+  const stream = await instance.toBuffer();
+  const chunks: Uint8Array[] = [];
+
+  for await (const chunk of stream as AsyncIterable<Uint8Array>) {
+    chunks.push(chunk);
+  }
+
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const output = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return output;
 }
 

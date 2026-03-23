@@ -235,9 +235,9 @@ export function CatalogPDF({
                       key={key}
                       style={[
                         styles.specRow,
-                        specIndex === specsEntries.length - 1 && {
-                          borderBottomWidth: 0,
-                        },
+                        specIndex === specsEntries.length - 1
+                          ? { borderBottomWidth: 0 }
+                          : {},
                       ]}
                     >
                       <Text style={styles.specKey}>{key}</Text>

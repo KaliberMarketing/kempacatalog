@@ -180,7 +180,9 @@ export function TechnicalSheet({
                   key={key}
                   style={[
                     styles.specRow,
-                    index === specsEntries.length - 1 && { borderBottomWidth: 0 },
+                    index === specsEntries.length - 1
+                      ? { borderBottomWidth: 0 }
+                      : {},
                   ]}
                 >
                   <Text style={styles.specKey}>{key}</Text>
