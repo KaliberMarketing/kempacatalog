@@ -10,8 +10,11 @@ import { getIntegrationConnection } from "@/lib/actions/integrations";
 import type { Organization, IntegrationConnectionStatus } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { useSearchParams } from "next/navigation";
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
+  const googleAdsParam = searchParams.get("google_ads");
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>("");
   const [googleAdsStatus, setGoogleAdsStatus] = useState<IntegrationConnectionStatus>("not_connected");
@@ -19,6 +22,22 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const googleAdsConnected = googleAdsStatus === "connected";
+  const googleAdsMessage = useMemo(() => {
+    if (!googleAdsParam) return null;
+
+    const messages: Record<string, string> = {
+      connected: "Google Ads connected successfully.",
+      error_missing_org: "Missing organization when starting Google Ads connection.",
+      error_missing_code_state: "Google OAuth callback was missing required data.",
+      error_env: "Google Ads OAuth is not configured correctly on this environment.",
+      error_token_exchange: "Google token exchange failed. Please try again.",
+      error_missing_refresh_or_access: "Google did not return the required OAuth tokens.",
+      error_updating_connection: "Could not update the Google Ads connection record.",
+      error_inserting_connection: "Could not save the Google Ads connection record.",
+    };
+
+    return messages[googleAdsParam] ?? "Google Ads connection returned an unknown response.";
+  }, [googleAdsParam]);
 
   useEffect(() => {
     let isMounted = true;
@@ -121,6 +140,11 @@ export default function SettingsPage() {
                     {loading ? "Connecting…" : googleAdsConnected ? "Connected" : "Connect"}
                   </Button>
                 </div>
+                {googleAdsMessage && (
+                  <p className={googleAdsParam === "connected" ? "text-sm text-emerald-600" : "text-sm text-destructive"}>
+                    {googleAdsMessage}
+                  </p>
+                )}
                 {error && <p className="text-sm text-destructive">{error}</p>}
               </div>
 

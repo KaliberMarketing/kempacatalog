@@ -15,9 +15,11 @@ export async function GET(request: Request) {
 
   const clientSecret = process.env.GOOGLE_ADS_OAUTH_CLIENT_SECRET;
   const clientId = process.env.GOOGLE_ADS_OAUTH_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_ADS_OAUTH_REDIRECT_URI;
+  const redirectUri =
+    process.env.GOOGLE_ADS_OAUTH_REDIRECT_URI ??
+    `${origin}/api/integrations/google-ads/oauth/callback`;
 
-  if (!clientSecret || !clientId || !redirectUri) {
+  if (!clientSecret || !clientId) {
     return NextResponse.redirect(`${origin}/app/settings?google_ads=error_env`);
   }
 

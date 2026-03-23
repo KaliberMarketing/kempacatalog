@@ -288,11 +288,11 @@ create policy "Members can view org integration connections"
   on public.integration_connections for select
   using (public.is_member_of(organization_id));
 
-create policy "Org admins can upsert integration connections"
+create policy "Members can insert org integration connections"
   on public.integration_connections for insert
-  with check (public.is_org_admin_of(organization_id));
+  with check (public.is_member_of(organization_id));
 
-create policy "Org admins can update integration connections"
+create policy "Members can update org integration connections"
   on public.integration_connections for update
-  using (public.is_org_admin_of(organization_id))
-  with check (public.is_org_admin_of(organization_id));
+  using (public.is_member_of(organization_id))
+  with check (public.is_member_of(organization_id));

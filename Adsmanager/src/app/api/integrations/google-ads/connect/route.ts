@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/actions/helpers";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const { origin } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const organizationId = searchParams.get("organizationId");
 
   if (!organizationId) {
@@ -14,9 +13,11 @@ export async function GET(request: Request) {
   await requireAuth();
 
   const clientId = process.env.GOOGLE_ADS_OAUTH_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_ADS_OAUTH_REDIRECT_URI;
+  const redirectUri =
+    process.env.GOOGLE_ADS_OAUTH_REDIRECT_URI ??
+    `${origin}/api/integrations/google-ads/oauth/callback`;
 
-  if (!clientId || !redirectUri) {
+  if (!clientId) {
     return NextResponse.redirect(`${origin}/app/settings?google_ads=error_env`);
   }
 
