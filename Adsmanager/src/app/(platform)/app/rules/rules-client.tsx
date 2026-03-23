@@ -23,6 +23,7 @@ import {
   createBudgetRule,
   toggleBudgetRule,
   updateBudgetRule,
+  runBudgetRules,
 } from "@/lib/actions/budget-rules";
 import { z } from "zod";
 import {
@@ -205,6 +206,8 @@ export function RulesClient({
   const [formError, setFormError] = useState<string | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [runningRules, setRunningRules] = useState(false);
+  const [runMessage, setRunMessage] = useState<string | null>(null);
 
   const form = useForm<BudgetRuleFormValues>({
     resolver: zodResolver(budgetRuleSchema),
@@ -381,15 +384,46 @@ export function RulesClient({
         description="Automate alerts and budget actions from metric thresholds."
       >
         {canManage && (
-          <Button type="button" onClick={openCreate}>
-            Add rule
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" onClick={openCreate}>
+              Add rule
+            </Button>
+            <Button
+              type="button"
+              disabled={runningRules}
+              onClick={async () => {
+                setRunningRules(true);
+                setRunMessage(null);
+                setToggleError(null);
+                try {
+                  const res = await runBudgetRules();
+                  setRunMessage(
+                    `Processed ${res.processedRules} rules. Triggered ${res.triggeredRules}. Updated budgets ${res.budgetCampaignsUpdated}.`
+                  );
+                } catch (e) {
+                  setRunMessage(
+                    e instanceof Error ? e.message : "Failed to run budget rules."
+                  );
+                } finally {
+                  setRunningRules(false);
+                }
+              }}
+            >
+              {runningRules ? "Running…" : "Run rules"}
+            </Button>
+          </div>
         )}
       </PageHeader>
 
       {toggleError && (
         <div className="mb-4 rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2">
           <p className="text-sm text-destructive">{toggleError}</p>
+        </div>
+      )}
+
+      {runMessage && (
+        <div className="mb-4 rounded-md border border-border px-3 py-2">
+          <p className="text-sm">{runMessage}</p>
         </div>
       )}
 
@@ -645,7 +679,7 @@ export function RulesClient({
             </FormField>
 
             <FormField
-              label="Action value"
+              label="Action value (EUR)"
               error={form.formState.errors.action_value}
             >
               <Input

@@ -28,10 +28,10 @@ interface DashboardViewProps {
 }
 
 const CHART_COLORS = {
-  spend: "#2563eb",
-  clicks: "#16a34a",
-  conversions: "#f59e0b",
-  revenue: "#8b5cf6",
+  spend: "#2f73e9",
+  clicks: "#28caea",
+  conversions: "#e6605f",
+  revenue: "#255399",
 };
 
 export function DashboardView({ metrics, campaigns, rules }: DashboardViewProps) {
@@ -132,7 +132,7 @@ export function DashboardView({ metrics, campaigns, rules }: DashboardViewProps)
               <div role="img" aria-label={`Line chart showing daily spend over ${dailyData.length} days. Total spend: ${formatCurrency(kpis.totalSpend)}`}>
                 <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d2dae8" />
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
@@ -157,7 +157,7 @@ export function DashboardView({ metrics, campaigns, rules }: DashboardViewProps)
               <div role="img" aria-label={`Bar chart comparing spend and clicks across ${channelData.length} channels`}>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={channelData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d2dae8" />
                     <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(v: number) => formatNumber(v)} />

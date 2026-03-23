@@ -29,6 +29,7 @@ import { departmentSchema } from "@/lib/validators";
 import {
   createDepartment,
   updateDepartment,
+  deleteDepartment,
 } from "@/lib/actions/departments";
 import { useUser } from "@/components/providers/user-provider";
 import type { Department, Organization } from "@/types/database";
@@ -67,6 +68,7 @@ export function DepartmentsClient({
   const router = useRouter();
   const user = useUser();
   const canManage = user?.canManage ?? false;
+  const isSuperAdmin = user?.isSuperAdmin ?? false;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Department | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -133,6 +135,28 @@ export function DepartmentsClient({
     }
   }
 
+  async function handleDelete(id: string) {
+    if (!isSuperAdmin) return;
+
+    const ok = window.confirm(
+      "Delete this department permanently?\n\nThis cannot be undone. Related campaigns/ad accounts will be updated as needed."
+    );
+    if (!ok) return;
+
+    setActionError(null);
+    setDialogOpen(false);
+    setEditingItem(null);
+    reset(defaultFormValues);
+
+    try {
+      await deleteDepartment(id);
+      router.refresh();
+    } catch {
+      window.alert("Delete failed. Please check your permissions or try again.");
+      setActionError("Something went wrong. Please try again.");
+    }
+  }
+
   const columns = useMemo<ColumnDef<Department>[]>(
     () => [
       {
@@ -165,14 +189,21 @@ export function DepartmentsClient({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => openEdit(row.original)}
-          >
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => openEdit(row.original)}
+            >
+              Edit
+            </Button>
+            {isSuperAdmin && (
+              <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(row.original.id)}>
+                Delete
+              </Button>
+            )}
+          </div>
         ),
       },
     ],

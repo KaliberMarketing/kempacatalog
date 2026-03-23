@@ -1,11 +1,80 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { fadeIn, staggerContainer } from "@/components/shared/motion";
+import { getOrganizations } from "@/lib/actions/organizations";
+import { getIntegrationConnection } from "@/lib/actions/integrations";
+import type { Organization, IntegrationConnectionStatus } from "@/types/database";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 
 export default function SettingsPage() {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>("");
+  const [googleAdsStatus, setGoogleAdsStatus] = useState<IntegrationConnectionStatus>("not_connected");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const googleAdsConnected = googleAdsStatus === "connected";
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const orgs = (await getOrganizations()) as Organization[];
+        if (!isMounted) return;
+        setOrganizations(orgs ?? []);
+        setSelectedOrganizationId((prev) => prev || (orgs?.[0]?.id ?? ""));
+      } catch {
+        if (!isMounted) return;
+        setError("Could not load organizations.");
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedOrganizationId) return;
+    let isMounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const conn = await getIntegrationConnection(selectedOrganizationId, "google_ads");
+        if (!isMounted) return;
+        setGoogleAdsStatus(conn?.status ?? "not_connected");
+      } catch {
+        if (!isMounted) return;
+        setGoogleAdsStatus("not_connected");
+        setError("Could not load Google Ads connection status.");
+      } finally {
+        if (!isMounted) return;
+        setLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedOrganizationId]);
+
+  const connectGoogleAds = () => {
+    if (!selectedOrganizationId) return;
+    setError(null);
+    window.location.href = `/api/integrations/google-ads/connect?organizationId=${encodeURIComponent(
+      selectedOrganizationId
+    )}`;
+  };
+
+  const orgOptions = useMemo(
+    () => organizations.map((o) => ({ value: o.id, label: o.name })),
+    [organizations]
+  );
+
   return (
     <div className="space-y-6">
       <motion.div
@@ -30,7 +99,31 @@ export default function SettingsPage() {
               <CardDescription>Connect external ad platform APIs</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <IntegrationRow name="Google Ads API" status="not_connected" index={0} />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-sm font-medium">Google Ads</div>
+                  <Badge variant={googleAdsConnected ? "success" : "outline"}>
+                    {googleAdsConnected ? "Connected" : "Not connected"}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Select
+                    value={selectedOrganizationId}
+                    onChange={(e) => setSelectedOrganizationId(e.target.value)}
+                    options={orgOptions}
+                    placeholder="Select organization"
+                  />
+                  <Button
+                    type="button"
+                    onClick={connectGoogleAds}
+                    disabled={!selectedOrganizationId || googleAdsConnected || loading}
+                  >
+                    {loading ? "Connecting…" : googleAdsConnected ? "Connected" : "Connect"}
+                  </Button>
+                </div>
+                {error && <p className="text-sm text-destructive">{error}</p>}
+              </div>
+
               <IntegrationRow name="Meta Ads API" status="not_connected" index={1} />
               <IntegrationRow name="LinkedIn Ads API" status="not_connected" index={2} />
               <IntegrationRow name="TikTok Ads API" status="not_connected" index={3} />

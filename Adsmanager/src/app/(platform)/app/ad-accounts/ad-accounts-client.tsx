@@ -20,7 +20,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createAdAccount, updateAdAccount } from "@/lib/actions/ad-accounts";
+import {
+  createAdAccount,
+  updateAdAccount,
+  deleteAdAccount,
+} from "@/lib/actions/ad-accounts";
 import { adAccountSchema, type AdAccountFormData } from "@/lib/validators";
 import { useUser } from "@/components/providers/user-provider";
 import type { AdAccount, Organization, BusinessUnit, Department, Channel } from "@/types/database";
@@ -80,6 +84,7 @@ export function AdAccountsClient({
   const router = useRouter();
   const user = useUser();
   const canManage = user?.canManage ?? false;
+  const isSuperAdmin = user?.isSuperAdmin ?? false;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AdAccount | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -165,6 +170,28 @@ export function AdAccountsClient({
     }
   };
 
+  async function handleDelete(id: string) {
+    if (!isSuperAdmin) return;
+
+    const ok = window.confirm(
+      "Delete this ad account permanently?\n\nThis cannot be undone. Related campaigns/metrics will be removed as well."
+    );
+    if (!ok) return;
+
+    setSubmitError(null);
+    setDialogOpen(false);
+    setEditingItem(null);
+    reset(defaultFormValues);
+
+    try {
+      await deleteAdAccount(id);
+      router.refresh();
+    } catch (e) {
+      window.alert("Delete failed. Please check your permissions or try again.");
+      setSubmitError(e instanceof Error ? e.message : "Something went wrong");
+    }
+  }
+
   const columns = useMemo<ColumnDef<AdAccount>[]>(
     () => [
       { accessorKey: "name", header: "Name" },
@@ -198,9 +225,21 @@ export function AdAccountsClient({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(row.original)}>
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => openEdit(row.original)}>
+              Edit
+            </Button>
+            {isSuperAdmin && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(row.original.id)}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
         ),
       },
     ],

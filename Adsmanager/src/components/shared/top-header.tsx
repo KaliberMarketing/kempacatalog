@@ -54,7 +54,7 @@ export function TopHeader({ onMenuToggle }: TopHeaderProps) {
       <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
-          className="md:hidden rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="md:hidden rounded-md p-1.5 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-accent transition-[transform,box-shadow,background-color,color] transform-gpu shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08),_inset_-1px_-1px_2px_rgba(255,255,255,0.18)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.16),_inset_-4px_-4px_8px_rgba(255,255,255,0.08)] active:translate-x-px active:translate-y-px"
           onClick={onMenuToggle}
           aria-label="Open navigation"
         >

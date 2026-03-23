@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { LazySpinner } from "@/components/shared/lazy-spinner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -88,24 +90,25 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 16, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-sm bg-card rounded-lg border border-border shadow-sm p-8"
+        className="w-full max-w-sm"
       >
-        <h1 className="text-xl font-semibold text-center mb-1">Ads Platform</h1>
+        <Card className="p-8">
+          <h1 className="text-xl font-semibold text-center mb-1">Ads Platform</h1>
 
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={mode}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15 }}
-            className="text-sm text-muted-foreground text-center mb-6"
-          >
-            {heading}
-          </motion.p>
-        </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={mode}
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.15 }}
+              className="text-sm text-muted-foreground text-center mb-6"
+            >
+              {heading}
+            </motion.p>
+          </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
               Email
@@ -186,65 +189,66 @@ export default function LoginPage() {
             )}
           </AnimatePresence>
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2"
+            className="w-full gap-2"
           >
             {loading ? (
               <LazySpinner delay={0} size="sm" />
             ) : null}
             {loading ? "Loading…" : submitLabel}
-          </button>
-        </form>
+          </Button>
+          </form>
 
-        <div className="mt-4 space-y-2 text-center text-sm">
-          {mode === "login" && (
-            <>
-              <button
-                type="button"
-                onClick={() => switchMode("forgot")}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Forgot password?
-              </button>
-              <p className="text-muted-foreground">
-                No account?{" "}
+          <div className="mt-4 space-y-2 text-center text-sm">
+            {mode === "login" && (
+              <>
                 <button
                   type="button"
-                  onClick={() => switchMode("signup")}
+                  onClick={() => switchMode("forgot")}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Forgot password?
+                </button>
+                <p className="text-muted-foreground">
+                  No account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => switchMode("signup")}
+                    className="text-foreground underline hover:no-underline"
+                  >
+                    Sign up
+                  </button>
+                </p>
+              </>
+            )}
+            {mode === "signup" && (
+              <p className="text-muted-foreground">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("login")}
                   className="text-foreground underline hover:no-underline"
                 >
-                  Sign up
+                  Sign in
                 </button>
               </p>
-            </>
-          )}
-          {mode === "signup" && (
-            <p className="text-muted-foreground">
-              Already have an account?{" "}
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                className="text-foreground underline hover:no-underline"
-              >
-                Sign in
-              </button>
-            </p>
-          )}
-          {mode === "forgot" && (
-            <p className="text-muted-foreground">
-              Remember your password?{" "}
-              <button
-                type="button"
-                onClick={() => switchMode("login")}
-                className="text-foreground underline hover:no-underline"
-              >
-                Sign in
-              </button>
-            </p>
-          )}
-        </div>
+            )}
+            {mode === "forgot" && (
+              <p className="text-muted-foreground">
+                Remember your password?{" "}
+                <button
+                  type="button"
+                  onClick={() => switchMode("login")}
+                  className="text-foreground underline hover:no-underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
+          </div>
+        </Card>
       </motion.div>
     </div>
   );

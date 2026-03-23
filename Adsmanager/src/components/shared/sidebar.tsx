@@ -90,7 +90,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
         <button
           type="button"
-          className="md:hidden rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+          className="md:hidden rounded-md p-1 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-[transform,box-shadow,background-color,color] transform-gpu shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08),_inset_-1px_-1px_2px_rgba(255,255,255,0.16)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.14),_inset_-4px_-4px_8px_rgba(255,255,255,0.06)] active:translate-x-px active:translate-y-px"
           onClick={onClose}
           aria-label="Close navigation"
         >
@@ -118,10 +118,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     href={item.href}
                     onClick={onClose}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 rounded-md px-3 py-2 cursor-pointer text-sm font-medium transition-[transform,box-shadow,background-color,color] transform-gpu shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),_inset_0_1px_0_rgba(255,255,255,0.50)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.10),_inset_-4px_-4px_8px_rgba(255,255,255,0.25)]",
                       isActive
                         ? "bg-sidebar-accent text-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                        : "bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
                     )}
                     aria-current={isActive ? "page" : undefined}
                   >
@@ -148,10 +148,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               href={adminItem.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 cursor-pointer text-sm font-medium transition-[transform,box-shadow,background-color,color] transform-gpu shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),_inset_0_1px_0_rgba(255,255,255,0.50)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.10),_inset_-4px_-4px_8px_rgba(255,255,255,0.25)]",
                 isActive
                   ? "bg-sidebar-accent text-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  : "bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
               )}
               aria-current={isActive ? "page" : undefined}
             >
@@ -172,10 +172,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               href={settingsItem.href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 cursor-pointer text-sm font-medium transition-[transform,box-shadow,background-color,color] transform-gpu shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),_inset_0_1px_0_rgba(255,255,255,0.50)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.10),_inset_-4px_-4px_8px_rgba(255,255,255,0.25)]",
                 isActive
                   ? "bg-sidebar-accent text-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  : "bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground"
               )}
               aria-current={isActive ? "page" : undefined}
             >

@@ -24,6 +24,7 @@ import {
 import {
   createOrganization,
   updateOrganization,
+  deleteOrganization,
 } from "@/lib/actions/organizations";
 import { organizationSchema, type OrganizationFormData } from "@/lib/validators";
 import { formatDate, slugify } from "@/lib/utils";
@@ -112,6 +113,56 @@ export function OrganizationsClient({
     setValue("slug", slugFromName(name), { shouldValidate: true });
   }, [name, setValue, editingId]);
 
+  const onSubmit = (data: OrganizationFormData) => {
+    setSubmitError(null);
+    startTransition(async () => {
+      try {
+        if (editingId) {
+          await updateOrganization(editingId, data);
+        } else {
+          await createOrganization(data);
+        }
+        reset(defaultFormValues);
+        setDialogOpen(false);
+        setEditingId(null);
+        router.replace("/app/organizations");
+        router.refresh();
+      } catch {
+        setSubmitError("Something went wrong. Please try again.");
+      }
+    });
+  };
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (!isSuperAdmin) return;
+
+      const ok = window.confirm(
+        "Delete this organization permanently?\n\nThis cannot be undone. Related business units, departments, campaigns, and ad accounts will be removed as well."
+      );
+      if (!ok) return;
+
+      startTransition(async () => {
+        try {
+          if (editingId === id) {
+            setDialogOpen(false);
+            setEditingId(null);
+            setSubmitError(null);
+            reset(defaultFormValues);
+          }
+
+          await deleteOrganization(id);
+          router.replace("/app/organizations");
+          router.refresh();
+        } catch {
+          window.alert("Delete failed. Please check your permissions or try again.");
+          setSubmitError("Something went wrong. Please try again.");
+        }
+      });
+    },
+    [editingId, isSuperAdmin, reset, router]
+  );
+
   const columns = useMemo<ColumnDef<Organization>[]>(
     () => [
       {
@@ -149,39 +200,31 @@ export function OrganizationsClient({
         header: "Actions",
         enableSorting: false,
         cell: ({ row }) => (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => openEdit(row.original)}
-          >
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => openEdit(row.original)}
+            >
+              Edit
+            </Button>
+            {isSuperAdmin && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(row.original.id)}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
         ),
       },
     ],
-    [openEdit]
+    [openEdit, handleDelete, isSuperAdmin]
   );
-
-  const onSubmit = (data: OrganizationFormData) => {
-    setSubmitError(null);
-    startTransition(async () => {
-      try {
-        if (editingId) {
-          await updateOrganization(editingId, data);
-        } else {
-          await createOrganization(data);
-        }
-        reset(defaultFormValues);
-        setDialogOpen(false);
-        setEditingId(null);
-        router.replace("/app/organizations");
-        router.refresh();
-      } catch {
-        setSubmitError("Something went wrong. Please try again.");
-      }
-    });
-  };
 
   return (
     <>

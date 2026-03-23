@@ -54,3 +54,19 @@ export async function updateBusinessUnit(
     throw new Error(sanitizeError(e));
   }
 }
+
+export async function deleteBusinessUnit(id: string) {
+  try {
+    const { supabase } = await requireAuth();
+    const { error } = await supabase
+      .from("business_units")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+
+    revalidatePath("/app/business-units");
+    revalidatePath("/app/dashboard");
+  } catch (e) {
+    throw new Error(sanitizeError(e));
+  }
+}

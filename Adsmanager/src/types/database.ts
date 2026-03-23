@@ -97,6 +97,7 @@ export interface Campaign {
   name: string;
   external_campaign_id: string | null;
   objective: string | null;
+  daily_budget_amount: number | null;
   status: CampaignStatus;
   start_date: string | null;
   end_date: string | null;
@@ -122,6 +123,22 @@ export interface CampaignMetric {
   roas: number | null;
   created_at: string;
   campaign?: Campaign;
+}
+
+export type IntegrationProvider = "google_ads";
+
+export type IntegrationConnectionStatus = "not_connected" | "connected";
+
+export interface IntegrationConnection {
+  id: string;
+  organization_id: string;
+  provider: IntegrationProvider;
+  status: IntegrationConnectionStatus;
+  google_access_token: string | null;
+  google_refresh_token: string | null;
+  google_token_expires_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface BudgetRule {

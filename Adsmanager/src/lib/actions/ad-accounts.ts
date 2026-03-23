@@ -65,3 +65,16 @@ export async function updateAdAccount(
     throw new Error(sanitizeError(e));
   }
 }
+
+export async function deleteAdAccount(id: string) {
+  try {
+    const { supabase } = await requireAuth();
+    const { error } = await supabase.from("ad_accounts").delete().eq("id", id);
+    if (error) throw error;
+
+    revalidatePath("/app/ad-accounts");
+    revalidatePath("/app/dashboard");
+  } catch (e) {
+    throw new Error(sanitizeError(e));
+  }
+}

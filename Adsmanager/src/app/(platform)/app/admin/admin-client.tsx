@@ -331,10 +331,10 @@ export function AdminClient({
         <button
           type="button"
           onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+          className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer transition-[transform,box-shadow,color,background-color] transform-gpu shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)] hover:translate-y-px hover:shadow-[inset_0_3px_6px_rgba(0,0,0,0.12),_inset_0_-3px_6px_rgba(255,255,255,0.06)] hover:bg-accent/20 -mb-px ${
             activeTab === "users"
               ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              : "border-border/70 text-muted-foreground hover:text-foreground"
           }`}
         >
           Users ({profiles.length})
@@ -342,10 +342,10 @@ export function AdminClient({
         <button
           type="button"
           onClick={() => setActiveTab("memberships")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+          className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer transition-[transform,box-shadow,color,background-color] transform-gpu shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)] hover:translate-y-px hover:shadow-[inset_0_3px_6px_rgba(0,0,0,0.12),_inset_0_-3px_6px_rgba(255,255,255,0.06)] hover:bg-accent/20 -mb-px ${
             activeTab === "memberships"
               ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              : "border-border/70 text-muted-foreground hover:text-foreground"
           }`}
         >
           Memberships ({memberships.length})

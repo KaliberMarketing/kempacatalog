@@ -1,29 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #636363;
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #0a0a0a;
-  --color-primary: #0a0a0a;
-  --color-primary-foreground: #fafafa;
-  --color-secondary: #f5f5f5;
-  --color-secondary-foreground: #0a0a0a;
-  --color-accent: #f5f5f5;
-  --color-accent-foreground: #0a0a0a;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #fafafa;
+  /* Breaz-ish palette (tuned for readability/CTA contrast) */
+  --color-background: #f8fafc;
+  --color-foreground: #091024;
+  --color-muted: #eef3ff;
+  --color-muted-foreground: #535b6d;
+  --color-border: #d2dae8;
+  --color-input: #d2dae8;
+  --color-ring: #2f73e9;
+
+  --color-primary: #2f73e9;
+  --color-primary-foreground: #f8fafc;
+
+  --color-secondary: #f1f6ff;
+  --color-secondary-foreground: #091024;
+
+  /* Used for hover/ghost backgrounds and subtle UI surfaces */
+  --color-accent: #b5c9e3;
+  --color-accent-foreground: #091024;
+
+  --color-destructive: #e6605f;
+  --color-destructive-foreground: #f8fafc;
+
   --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
+  --color-card-foreground: #091024;
   --color-popover: #ffffff;
-  --color-popover-foreground: #0a0a0a;
-  --color-sidebar: #fafafa;
-  --color-sidebar-foreground: #404040;
-  --color-sidebar-border: #e5e5e5;
-  --color-sidebar-accent: #f0f0f0;
+  --color-popover-foreground: #091024;
+
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #535b6d;
+  --color-sidebar-border: #d2dae8;
+  --color-sidebar-accent: #b5c9e3;
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;

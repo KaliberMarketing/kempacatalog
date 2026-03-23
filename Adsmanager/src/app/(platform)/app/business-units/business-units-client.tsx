@@ -25,6 +25,7 @@ import { businessUnitSchema } from "@/lib/validators";
 import {
   createBusinessUnit,
   updateBusinessUnit,
+  deleteBusinessUnit,
 } from "@/lib/actions/business-units";
 import { useUser } from "@/components/providers/user-provider";
 import type { BusinessUnit, Organization } from "@/types/database";
@@ -57,6 +58,7 @@ export function BusinessUnitsClient({
   const router = useRouter();
   const user = useUser();
   const canManage = user?.canManage ?? false;
+  const isSuperAdmin = user?.isSuperAdmin ?? false;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BusinessUnit | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -126,6 +128,28 @@ export function BusinessUnitsClient({
     }
   }
 
+  async function handleDelete(id: string) {
+    if (!isSuperAdmin) return;
+
+    const ok = window.confirm(
+      "Delete this business unit permanently?\n\nThis cannot be undone. Related ad accounts and campaigns will be updated as needed."
+    );
+    if (!ok) return;
+
+    setActionError(null);
+    setDialogOpen(false);
+    setEditingItem(null);
+    reset(defaultFormValues);
+
+    try {
+      await deleteBusinessUnit(id);
+      router.refresh();
+    } catch {
+      window.alert("Delete failed. Please check your permissions or try again.");
+      setActionError("Something went wrong. Please try again.");
+    }
+  }
+
   const columns = useMemo<ColumnDef<BusinessUnit>[]>(
     () => [
       {
@@ -158,14 +182,21 @@ export function BusinessUnitsClient({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => openEdit(row.original)}
-          >
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => openEdit(row.original)}
+            >
+              Edit
+            </Button>
+            {isSuperAdmin && (
+              <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(row.original.id)}>
+                Delete
+              </Button>
+            )}
+          </div>
         ),
       },
     ],

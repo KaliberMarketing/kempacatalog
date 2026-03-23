@@ -56,6 +56,7 @@ export async function createCampaign(formData: CampaignFormData) {
       department_id: parsed.department_id || null,
       external_campaign_id: parsed.external_campaign_id || null,
       objective: parsed.objective || null,
+      daily_budget_amount: parsed.daily_budget_amount ?? null,
       start_date: parsed.start_date || null,
       end_date: parsed.end_date || null,
     };
@@ -78,6 +79,7 @@ export async function updateCampaign(id: string, formData: CampaignFormData) {
       department_id: parsed.department_id || null,
       external_campaign_id: parsed.external_campaign_id || null,
       objective: parsed.objective || null,
+      daily_budget_amount: parsed.daily_budget_amount ?? null,
       start_date: parsed.start_date || null,
       end_date: parsed.end_date || null,
     };

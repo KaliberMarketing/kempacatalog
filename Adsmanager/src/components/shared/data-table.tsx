@@ -96,7 +96,7 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <button
                           type="button"
-                          className="flex items-center gap-1 select-none hover:text-foreground transition-colors"
+                          className="flex items-center gap-1 select-none rounded-md px-1 py-0.5 hover:text-foreground transition-[transform,box-shadow,color] transform-gpu shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.12),_inset_-4px_-4px_8px_rgba(255,255,255,0.04)] active:translate-x-px active:translate-y-px"
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}

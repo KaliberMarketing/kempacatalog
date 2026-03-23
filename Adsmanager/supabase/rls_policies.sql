@@ -13,6 +13,8 @@ alter table public.ad_accounts enable row level security;
 alter table public.campaigns enable row level security;
 alter table public.campaign_metrics enable row level security;
 alter table public.budget_rules enable row level security;
+alter table public.budget_rule_executions enable row level security;
+alter table public.integration_connections enable row level security;
 
 -- Helper: get current user's profile id
 create or replace function public.current_profile_id()
@@ -257,5 +259,40 @@ create policy "Org admins can create budget rules"
 
 create policy "Org admins can update budget rules"
   on public.budget_rules for update
+  using (public.is_org_admin_of(organization_id))
+  with check (public.is_org_admin_of(organization_id));
+
+-- ============================================================
+-- BUDGET RULE EXECUTIONS
+-- ============================================================
+create policy "Super admins manage all budget rule executions"
+  on public.budget_rule_executions for all
+  using (public.is_super_admin());
+
+create policy "Members can view org budget rule executions"
+  on public.budget_rule_executions for select
+  using (public.is_member_of(organization_id));
+
+create policy "Org admins can create budget rule executions"
+  on public.budget_rule_executions for insert
+  with check (public.is_org_admin_of(organization_id));
+
+-- ============================================================
+-- INTEGRATION CONNECTIONS
+-- ============================================================
+create policy "Super admins manage all integration connections"
+  on public.integration_connections for all
+  using (public.is_super_admin());
+
+create policy "Members can view org integration connections"
+  on public.integration_connections for select
+  using (public.is_member_of(organization_id));
+
+create policy "Org admins can upsert integration connections"
+  on public.integration_connections for insert
+  with check (public.is_org_admin_of(organization_id));
+
+create policy "Org admins can update integration connections"
+  on public.integration_connections for update
   using (public.is_org_admin_of(organization_id))
   with check (public.is_org_admin_of(organization_id));

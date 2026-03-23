@@ -34,7 +34,7 @@ function DialogContent({
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-card p-6 shadow-lg animate-in fade-in",
+        "rounded-lg border border-border/40 bg-card text-card-foreground backdrop-blur-md p-6 shadow-[0_10px_30px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.55)] animate-in fade-in",
         className
       )}
       {...props}
@@ -72,7 +72,7 @@ function DialogClose({ onClose }: { onClose: () => void }) {
   return (
     <button
       onClick={onClose}
-      className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
+      className="absolute right-4 top-4 rounded-md p-1.5 opacity-80 cursor-pointer hover:opacity-100 transform-gpu transition-[transform,box-shadow,opacity,background-color] shadow-[inset_1px_1px_2px_rgba(0,0,0,0.12),_inset_-1px_-1px_2px_rgba(255,255,255,0.28)] hover:translate-x-px hover:translate-y-px hover:shadow-[inset_6px_6px_12px_rgba(0,0,0,0.18),_inset_-6px_-6px_12px_rgba(255,255,255,0.08)] hover:bg-accent/50 active:translate-x-px active:translate-y-px"
     >
       <X className="h-4 w-4" />
     </button>

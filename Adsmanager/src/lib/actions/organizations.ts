@@ -65,3 +65,16 @@ export async function updateOrganization(
     throw new Error(sanitizeError(e));
   }
 }
+
+export async function deleteOrganization(id: string) {
+  try {
+    const { supabase } = await requireAuth();
+    const { error } = await supabase.from("organizations").delete().eq("id", id);
+    if (error) throw error;
+
+    revalidatePath("/app/organizations");
+    revalidatePath("/app/dashboard");
+  } catch (e) {
+    throw new Error(sanitizeError(e));
+  }
+}

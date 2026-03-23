@@ -31,6 +31,7 @@ const campaignFormSchema = campaignSchema.extend({
   department_id: z.union([z.string().uuid(), z.literal("")]).optional(),
   external_campaign_id: z.union([z.string().max(100), z.literal("")]).optional(),
   objective: z.union([z.string().max(100), z.literal("")]).optional(),
+  daily_budget_amount: z.union([z.coerce.number().min(0), z.literal("")]).optional(),
   start_date: z.union([z.string(), z.literal("")]).optional(),
   end_date: z.union([z.string(), z.literal("")]).optional(),
 });
@@ -53,6 +54,8 @@ function toPayload(values: CampaignFormValues): CampaignFormData {
     external_campaign_id:
       values.external_campaign_id === "" ? undefined : values.external_campaign_id,
     objective: values.objective === "" ? undefined : values.objective,
+    daily_budget_amount:
+      values.daily_budget_amount === "" ? undefined : values.daily_budget_amount,
     start_date: values.start_date === "" ? undefined : values.start_date,
     end_date: values.end_date === "" ? undefined : values.end_date,
   });
@@ -66,6 +69,7 @@ const defaultFormValues: CampaignFormValues = {
   name: "",
   external_campaign_id: "",
   objective: "",
+  daily_budget_amount: "",
   status: "active",
   start_date: "",
   end_date: "",
@@ -151,6 +155,8 @@ export function CampaignsClient({
         name: row.name,
         external_campaign_id: row.external_campaign_id ?? "",
         objective: row.objective ?? "",
+        daily_budget_amount:
+          row.daily_budget_amount != null ? row.daily_budget_amount : "",
         status: row.status,
         start_date: row.start_date ? row.start_date.slice(0, 10) : "",
         end_date: row.end_date ? row.end_date.slice(0, 10) : "",
@@ -195,6 +201,14 @@ export function CampaignsClient({
         id: "objective",
         header: "Objective",
         accessorFn: (row) => row.objective ?? "—",
+      },
+      {
+        id: "daily_budget_amount",
+        header: "Daily budget",
+        accessorFn: (row) =>
+          row.daily_budget_amount != null
+            ? `EUR ${Number(row.daily_budget_amount).toFixed(2)}`
+            : "—",
       },
       {
         id: "status",
@@ -316,6 +330,15 @@ export function CampaignsClient({
             </FormField>
             <FormField label="Objective" error={errors.objective}>
               <Input {...register("objective")} />
+            </FormField>
+            <FormField label="Daily budget (EUR)" error={errors.daily_budget_amount}>
+              <Input
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="e.g. 50.00"
+                {...register("daily_budget_amount")}
+              />
             </FormField>
             <FormField label="Status" required error={errors.status}>
               <Select options={statusOptions} {...register("status")} />

@@ -51,3 +51,16 @@ export async function updateDepartment(
     throw new Error(sanitizeError(e));
   }
 }
+
+export async function deleteDepartment(id: string) {
+  try {
+    const { supabase } = await requireAuth();
+    const { error } = await supabase.from("departments").delete().eq("id", id);
+    if (error) throw error;
+
+    revalidatePath("/app/departments");
+    revalidatePath("/app/dashboard");
+  } catch (e) {
+    throw new Error(sanitizeError(e));
+  }
+}

@@ -49,6 +49,7 @@ export const campaignSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
   external_campaign_id: z.string().max(100).nullable().optional(),
   objective: z.string().max(100).nullable().optional(),
+  daily_budget_amount: z.coerce.number().min(0).nullable().optional(),
   status: z.enum(["active", "paused", "completed", "archived", "draft"]).default("active"),
   start_date: z.string().nullable().optional(),
   end_date: z.string().nullable().optional(),
