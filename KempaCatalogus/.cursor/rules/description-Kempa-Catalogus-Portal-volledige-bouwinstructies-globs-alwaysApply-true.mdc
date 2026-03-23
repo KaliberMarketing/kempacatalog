@@ -1,0 +1,405 @@
+---
+alwaysApply: true
+---
+
+# Cursor Prompt — Kempa Dealer Portal
+
+## Project Setup (eerste stap — doe dit vóór alles)
+
+### 1. Clone de GitHub repo en installeer dependencies
+
+```bash
+git clone https://github.com/KaliberMarketing/kempacatalog.git
+cd kempacatalog
+npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=no --import-alias="@/*"
+npm install @supabase/supabase-js @supabase/ssr
+npm install @react-pdf/renderer
+npm install resend
+npm install papaparse @types/papaparse
+```
+
+### 2. Maak `.env.local` aan in de root (NOOIT committen — staat al in .gitignore)
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://arwvsmqoqbryhzfikpnq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyd3ZzbXFvcWJyeWh6ZmlrcG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MDM5NTksImV4cCI6MjA4ODI3OTk1OX0.y3R2NNZoNDX3b-kGr2atZq1UsGSHSrTPDUYb0Bq6agE
+SUPABASE_SERVICE_ROLE_KEY=[PLAK HIER JE SERVICE ROLE KEY — zie Supabase dashboard > Project Settings > API]
+
+# Sales catalogus beveiliging
+SALES_PASSWORD=kempa2025
+
+# E-mail (Resend — maak account aan op resend.com)
+RESEND_API_KEY=
+KEMPA_INQUIRY_EMAIL=info@kempa.be
+
+# App
+NEXT_PUBLIC_APP_DOMAIN=kempacatalogus.be
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### 3. Controleer dat `.gitignore` deze regels bevat (voeg toe indien nodig)
+
+```
+.env.local
+.env*.local
+```
+
+### 4. Supabase project details
+
+- **Project URL:** `https://arwvsmqoqbryhzfikpnq.supabase.co`
+- **Project ID:** `arwvsmqoqbryhzfikpnq`
+- **GitHub repo:** `https://github.com/KaliberMarketing/kempacatalog.git`
+
+Voer het volledige database schema (zie sectie "Database Schema") uit in de **Supabase SQL Editor** via het dashboard op `supabase.com`.
+
+---
+
+## Projectoverzicht
+
+Bouw een volledig functioneel **Next.js 14 (App Router)** webplatform genaamd **Kempa Catalogus Portal**. Dit platform heeft twee primaire gebruiksscenario's:
+
+1. **Algemene salescatalogus** — toegankelijk via `kempacatalogus.be` met één gedeeld wachtwoord, bedoeld voor intern salesgebruik bij Kempa
+2. **Dealer-specifieke branded catalogus** — toegankelijk via `[dealer-slug].kempacatalogus.be`, elke dealer heeft een eigen login en een volledig branded omgeving (kleuren, lettertype, logo)
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js 14 (App Router, Server Components)
+- **Database + Auth:** Supabase (PostgreSQL + Supabase Auth + Row Level Security)
+- **Storage:** Supabase Storage (productafbeeldingen, dealer logo's, PDF exports)
+- **Hosting:** Vercel (met wildcard subdomain support: `*.kempacatalogus.be`)
+- **Styling:** Tailwind CSS
+- **PDF generatie:** `@react-pdf/renderer` of `puppeteer` (server-side)
+- **E-mail:** Resend (voor aanvraagformulieren)
+- **Taal:** TypeScript
+
+---
+
+## Domein & Routing Architectuur
+
+Gebruik Next.js middleware om het juiste portaal te bepalen op basis van het subdomein:
+
+```
+kempacatalogus.be            → Algemene salescatalogus (wachtwoordbeveiligd)
+[slug].kempacatalogus.be     → Dealer-specifieke branded catalogus
+kempacatalogus.be/admin      → Admin panel (Kempa intern)
+```
+
+**In `middleware.ts`:**
+- Lees `request.headers.get('host')`
+- Extraheer de subdomain
+- Als subdomain aanwezig → dealer flow (check dealer_slug in DB, laad branding)
+- Als geen subdomain → sales flow of admin
+- Bescherm alle routes met auth checks
+
+**Vercel configuratie (`vercel.json`):**
+```json
+{
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "(?<slug>[^.]+)\\.kempacatalogus\\.be" }],
+      "destination": "/dealer/:slug/:path*"
+    }
+  ]
+}
+```
+
+---
+
+## Database Schema (Supabase / PostgreSQL)
+
+Maak de volgende tabellen aan met RLS policies:
+
+```sql
+-- Dealers
+CREATE TABLE dealers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  contact_email TEXT,
+  primary_color TEXT DEFAULT '#1a1a1a',
+  secondary_color TEXT DEFAULT '#ffffff',
+  accent_color TEXT DEFAULT '#c8a96e',
+  background_color TEXT DEFAULT '#f9f9f9',
+  text_color TEXT DEFAULT '#1a1a1a',
+  font_heading TEXT DEFAULT 'Syne',
+  font_body TEXT DEFAULT 'DM Sans',
+  logo_url TEXT,
+  inquiry_email TEXT, -- als null → gaat naar Kempa intern
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Productcategorieën
+CREATE TABLE categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  parent_id UUID REFERENCES categories(id),
+  sort_order INT DEFAULT 0
+);
+
+-- Producten
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  category_id UUID REFERENCES categories(id),
+  material TEXT,         -- filter: Materiaal / afwerking
+  finish TEXT,           -- filter: Materiaal / afwerking (verfijning)
+  specs JSONB,           -- flexibele technische specs: { afmeting, gewicht, dikte, ... }
+  images TEXT[],         -- array van Supabase Storage URLs
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Dealer ↔ Product koppeling
+CREATE TABLE dealer_products (
+  dealer_id UUID REFERENCES dealers(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  show_price BOOLEAN DEFAULT false,
+  price DECIMAL(10,2),
+  custom_note TEXT,
+  PRIMARY KEY (dealer_id, product_id)
+);
+
+-- Auth users metadata (via Supabase Auth)
+-- user_metadata bevat: { role: 'dealer' | 'admin' | 'sales', dealer_id: uuid }
+
+-- Aanvraagformulier logs
+CREATE TABLE inquiries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source TEXT NOT NULL, -- 'dealer' | 'sales'
+  dealer_id UUID REFERENCES dealers(id),
+  product_ids UUID[],
+  name TEXT,
+  company TEXT,
+  email TEXT,
+  message TEXT,
+  sent_to TEXT, -- e-mailadres waarnaar verstuurd
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+**RLS Policies:**
+- Dealers kunnen enkel hun eigen `dealer_products` rijen lezen
+- Dealers kunnen enkel producten zien die via `dealer_products` aan hen gekoppeld zijn
+- Admin kan alles lezen en schrijven
+- Sales user kan alle producten lezen (geen dealer_products koppeling nodig)
+
+---
+
+## Applicatiestructuur
+
+```
+/app
+  /admin                        → Admin panel (role: admin)
+    /page.tsx                   → Dashboard
+    /dealers/page.tsx           → Dealerbeheer (CRUD)
+    /dealers/[id]/page.tsx      → Dealer detail + branding editor
+    /products/page.tsx          → Productbeheer (CRUD + CSV import)
+    /products/[id]/page.tsx     → Product detail
+    /inquiries/page.tsx         → Aanvragen overzicht
+
+  /login/page.tsx               → Gedeelde loginpagina (herkent context via subdomain of param)
+  /sales/page.tsx               → Salescatalogus (wachtwoord: één gedeeld wachtwoord)
+  /sales/[slug]/page.tsx        → Product detail (sales view)
+
+  /dealer/[slug]                → Dealer portal (dynamisch, geladen via subdomain rewrite)
+    /page.tsx                   → Redirect naar /catalogus
+    /catalogus/page.tsx         → Dealer catalogus
+    /catalogus/[productSlug]    → Product detail (dealer view)
+
+/components
+  /catalog
+    CatalogGrid.tsx             → Productgrid met filters
+    ProductCard.tsx             → Productkaart
+    FilterSidebar.tsx           → Filters: categorie, materiaal/afwerking
+    ProductDetail.tsx           → Detailpagina component
+    SelectionBar.tsx            → Geselecteerde producten voor PDF export
+  /branding
+    DealerShell.tsx             → Layout wrapper die branding injecteert via CSS vars
+    BrandingEditor.tsx          → Admin: visuele branding configurator
+  /pdf
+    TechnicalSheet.tsx          → React-PDF template: technische fiche 1 product
+    CatalogPDF.tsx              → React-PDF template: meerdere producten (selectie)
+  /forms
+    InquiryForm.tsx             → Aanvraagformulier
+  /admin
+    ProductForm.tsx             → Product aanmaken/bewerken
+    CSVImporter.tsx             → CSV import component
+    DealerForm.tsx              → Dealer aanmaken/bewerken
+
+/lib
+  supabase/
+    client.ts                   → Browser Supabase client
+    server.ts                   → Server Supabase client (SSR)
+    middleware.ts               → Auth + dealer context middleware
+  pdf/
+    generateSheet.ts            → Server-side PDF generatie (1 product)
+    generateCatalog.ts          → Server-side PDF generatie (selectie)
+  email/
+    sendInquiry.ts              → Resend e-mail functie
+  fonts.ts                      → Beschikbare Google Fonts lijst
+
+/middleware.ts                  → Root middleware: subdomain routing + auth
+```
+
+---
+
+## Feature Specificaties
+
+### 1. Branding Systeem (per dealer)
+
+De `DealerShell` component injecteert CSS custom properties op basis van de branding config uit de database:
+
+```tsx
+// DealerShell.tsx
+<div style={{
+  '--color-primary': branding.primary_color,
+  '--color-secondary': branding.secondary_color,
+  '--color-accent': branding.accent_color,
+  '--color-bg': branding.background_color,
+  '--color-text': branding.text_color,
+  '--font-heading': `'${branding.font_heading}', sans-serif`,
+  '--font-body': `'${branding.font_body}', sans-serif`,
+} as React.CSSProperties}>
+  {children}
+</div>
+```
+
+De `BrandingEditor` in het admin panel heeft:
+- **Kleurenpalet:** Een color picker per variabele (primary, secondary, accent, background, text). Bied ook 4-5 voorgedefinieerde thema's aan als snelstartoptie.
+- **Lettertype selectie:** Dropdown met pre-goedgekeurde Google Fonts (minimaal 12 opties: Syne, DM Sans, Playfair Display, Raleway, Lato, Nunito, Josefin Sans, Cormorant Garamond, Barlow, Outfit, Fraunces, Plus Jakarta Sans). Heading en body font apart instelbaar.
+- **Live preview:** Rechts van de editor een minipreview die realtime updatet terwijl je aanpassingen maakt.
+- **Opslaan:** Sla branding config op in `dealers` tabel.
+
+### 2. Catalogusfilters
+
+Beide catalogi (sales + dealer) hebben een `FilterSidebar` met:
+
+- **Productcategorie / type** — checkboxes, multi-select, dynamisch geladen uit `categories` tabel
+- **Materiaal / afwerking** — checkboxes, multi-select, dynamisch geladen via DISTINCT query op `products.material` en `products.finish`
+- Filters zijn URL-gebaseerd (`?category=deuren&material=eik`) zodat links deelbaar zijn
+- Filterresultaten worden server-side gefilterd (geen client-side filtering)
+
+### 3. PDF Generatie
+
+**Technische fiche (1 product):**
+- Trigger: knop "Download fiche" op productdetailpagina
+- Genereert een PDF via `/api/pdf/sheet?productId=xxx`
+- Bevat: productnaam, afbeelding, beschrijving, specs tabel, materiaal/afwerking
+- Bij dealer: bevat dealer logo + dealer kleuren (branded fiche)
+- Bij sales: bevat Kempa logo
+
+**Catalogus PDF (selectie):**
+- Gebruiker selecteert meerdere producten via checkboxes in de catalogus
+- Onderaan verschijnt een `SelectionBar` met "Exporteer als PDF (x producten)"
+- Genereert via `/api/pdf/catalog?productIds=xxx,yyy,zzz`
+- Elk product krijgt een eigen pagina in de PDF
+- Cover pagina met dealer logo (of Kempa logo voor sales)
+
+### 4. Aanvraagformulier
+
+**Sales catalogus:**
+- Knop "Aanvraag sturen" op productdetailpagina of in SelectionBar
+- Formulier: naam, bedrijf, e-mail, bericht, geselecteerde producten (readonly)
+- Verstuurt via Resend naar Kempa intern (`info@kempa.be` of configureerbaar in `.env`)
+- Wordt opgeslagen in `inquiries` tabel
+
+**Dealer catalogus:**
+- Zelfde flow, maar `inquiry_email` veld op de dealer bepaalt het bestemmingsadres
+- Als `inquiry_email` null → valt terug op Kempa intern adres
+- E-mail bevat dealer naam als context
+
+### 5. CSV Import (Admin)
+
+De `CSVImporter` component in het admin panel ondersteunt het importeren van producten via CSV:
+
+**Verwacht CSV formaat:**
+```
+name,slug,description,category_slug,material,finish,specs_json,image_urls
+"Eiken deur","eiken-deur","Beschrijving...","deuren","Eik","Naturel","{}","url1|url2"
+```
+
+- Valideer CSV client-side voor upload (check verplichte kolommen)
+- Toon preview van eerste 5 rijen voor bevestiging
+- Verwerk via `/api/admin/products/import` (server action)
+- Toon importresultaat: X succesvol, Y fouten (met foutmeldingen per rij)
+- Bestaande producten (zelfde slug) worden geüpdatet, nieuwe worden aangemaakt
+
+### 6. Admin Panel
+
+Bouwen als een clean dashboard met:
+
+- **Dealerbeheer:** Overzicht van alle dealers, aanmaken/bewerken/deactiveren, branding editor, producten toewijzen via een checkbox-interface (zoek + bulk select)
+- **Productbeheer:** Tabel met alle producten, filterbaar, CRUD + CSV import knop
+- **Aanvragen:** Chronologisch overzicht van alle binnengekomen aanvragen, klikbaar voor detail
+
+### 7. Salescatalogus beveiliging
+
+- Simpele wachtwoordbeveiliging via een `SALES_PASSWORD` environment variable
+- Bij eerste bezoek: toon een wachtwoordinvoerscherm
+- Na correct wachtwoord: sla een session cookie op (`sales_auth=true`, httpOnly, 7 dagen geldig)
+- Middleware controleert deze cookie op `/sales/*` routes
+- Geen Supabase user nodig voor sales — enkel cookie-gebaseerd
+
+---
+
+## Environment Variables
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Sales catalogus
+SALES_PASSWORD=
+
+# E-mail (Resend)
+RESEND_API_KEY=
+KEMPA_INQUIRY_EMAIL=info@kempa.be
+
+# App
+NEXT_PUBLIC_APP_DOMAIN=kempacatalogus.be
+```
+
+---
+
+## Implementatievolgorde (bouw in deze volgorde)
+
+1. **Project setup** — Next.js 14, Supabase client/server config, Tailwind, middleware skeleton
+2. **Database** — Alle tabellen aanmaken in Supabase, RLS policies, seed data met 5 testproducten en 1 testdealer
+3. **Auth flow** — Login pagina, Supabase Auth integratie, middleware met subdomain detection, rol-gebaseerde redirects
+4. **Branding systeem** — DealerShell component, CSS variables injectie, branding laden uit DB
+5. **Catalogus core** — CatalogGrid, ProductCard, FilterSidebar (categorie + materiaal), URL-gebaseerde filters
+6. **Productdetailpagina** — Afbeeldingen, specs tabel, beschrijving
+7. **Dealer portal** — Subdomain routing, dealer-specifieke productfiltering via dealer_products
+8. **Salescatalogus** — Wachtwoordbeveiliging, cookie sessie, sales-specifieke view
+9. **PDF generatie** — Technische fiche + catalogus PDF export
+10. **Aanvraagformulier** — SelectionBar, InquiryForm, Resend integratie, opslaan in DB
+11. **Admin panel** — Dashboard, dealerbeheer, productbeheer + CSV import, branding editor met live preview, aanvragen overzicht
+12. **Polish** — Loading states, error handling, responsiveness, lege staten
+
+---
+
+## Design Richtlijnen
+
+- Clean, professioneel en neutraal als basis (de dealer branding overschrijft dit toch)
+- Kempa huisstijl voor de admin en salescatalogus: gebruik houtwarme tinten als accent
+- Mobiel-responsief voor alle views
+- Productgrid: 3 kolommen op desktop, 2 op tablet, 1 op mobiel
+- Gebruik `next/image` voor alle productafbeeldingen (lazy loading, WebP optimalisatie)
+
+---
+
+## Notities
+
+- De wildcard subdomain (`*.kempacatalogus.be`) moet in Vercel worden geconfigureerd als custom domain. Stel ook een wildcard DNS A-record in bij de domeinregistrar: `* IN A <vercel-ip>`.
+- Voor lokale ontwikkeling: simuleer subdomain routing via `localhost:3000?dealer=houthandel-janssen` als fallback in de middleware.
+- Supabase RLS is de veiligheidslaag — vertrouw nooit enkel op frontend filtering voor gevoelige data.
